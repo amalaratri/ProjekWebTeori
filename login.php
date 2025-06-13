@@ -10,8 +10,6 @@ $pdo = $database->getConnection();
 
 // Check if the database connection was successful
 if ($pdo === null) {
-    // If connection fails, redirect to an error page or show a generic error
-    // For now, we'll set a generic error message for the login form
     $error = "System error: Database connection unavailable. Please try again later.";
 }
 
@@ -25,13 +23,12 @@ if (isset($_SESSION['user_id'])) {
     exit();
 }
 
-$error = 'Login Gagal'; // Initialize error message
-$success_message = 'Login Berhasil'; // For messages coming from registration page
+$error = 'Login Gagal';
+$success_message = 'Login Berhasil';
 
-// Check for success message from previous page (e.g., after registration)
 if (isset($_SESSION['success_message'])) {
     $success_message = $_SESSION['success_message'];
-    unset($_SESSION['success_message']); // Clear the message after displaying
+    unset($_SESSION['success_message']);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -53,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = $stmt->fetch();
 
             if ($user && password_verify($password, $user['password'])) {
-                // Check user status
+                // Apakah akun sudah aktif
                 if ($user['status'] === 'pending') {
                     $error = 'Your account is pending verification. Please wait for administrator approval.';
                 } elseif ($user['status'] === 'inactive') {

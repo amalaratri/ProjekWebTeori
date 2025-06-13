@@ -1,36 +1,84 @@
 <?php
 session_start();
 
+// Include your Database class file
+require_once 'config/database.php'; 
+
+// Instantiate the Database class and get the PDO connection object
+$database = new Database();
+$pdo = $database->getConnection();
+
 // Check if user is logged in and is a pharmacy
-if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'pharmacy') {
+// Also check if $pdo connection is successful
+if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'pharmacy' || $pdo === null) {
+    // If not logged in, not a pharmacy, or DB connection failed, redirect
     header("Location: login.php");
     exit();
 }
 
-// Calculate statistics
-$totalMedications = count($_SESSION['medications']);
+// Get the logged-in pharmacy's ID
+$pharmacy_id = $_SESSION['pharmacy_id'] ?? null;
+
+// Initialize variables for statistics and data
+$totalMedications = 0;
 $newOrders = 0;
 $processingOrders = 0;
 $completedOrders = 0;
-
-foreach ($_SESSION['orders'] as $order) {
-    if ($order['status'] === 'new') {
-        $newOrders++;
-    } elseif ($order['status'] === 'preparing' || $order['status'] === 'ready') {
-        $processingOrders++;
-    } elseif ($order['status'] === 'completed') {
-        $completedOrders++;
-    }
-}
-
-// Get recent orders (limit to 2)
-$recentOrders = array_slice($_SESSION['orders'], 0, 2);
-
-// Get low stock medications (less than 60)
+$recentOrders = [];
 $lowStockMedications = [];
-foreach ($_SESSION['medications'] as $medication) {
-    if ($medication['stock'] < 60) {
-        $lowStockMedications[] = $medication;
+$dashboardError = ''; // For displaying specific dashboard errors
+
+if ($pharmacy_id === null) {
+    $dashboardError = "Pharmacy ID not found in session. Please log in again.";
+    header("Location: login.php"); exit();
+} else {
+    try {
+        // --- Calculate Statistics ---
+
+        // Total Medications in this pharmacy's inventory
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM pharmacy_inventory WHERE pharmacy_id = ?");
+        $stmt->execute([$pharmacy_id]);
+        $totalMedications = $stmt->fetchColumn();
+
+        // Orders Statistics
+        $stmt = $pdo->prepare("SELECT status, COUNT(*) as count FROM orders WHERE pharmacy_id = ? GROUP BY status");
+        $stmt->execute([$pharmacy_id]);
+        $orderCounts = $stmt->fetchAll(PDO::FETCH_KEY_PAIR); // Gets an associative array like ['pending' => 5, 'completed' => 10]
+
+        $newOrders = $orderCounts['pending'] ?? 0; // 'new' status is now 'pending' in your DB
+        $processingOrders = ($orderCounts['confirmed'] ?? 0) + ($orderCounts['preparing'] ?? 0) + ($orderCounts['ready'] ?? 0);
+        $completedOrders = $orderCounts['completed'] ?? 0;
+
+        // --- Get Recent Orders ---
+        // Fetch orders, ordered by creation date, limited to 2, and join with doctors for name
+        $stmt = $pdo->prepare("SELECT o.id, o.order_number, o.patient_name, o.status, d.full_name as doctorName 
+                               FROM orders o
+                               JOIN doctors d ON o.doctor_id = d.id
+                               WHERE o.pharmacy_id = ?
+                               ORDER BY o.created_at DESC
+                               LIMIT 2");
+        $stmt->execute([$pharmacy_id]);
+        $recentOrders = $stmt->fetchAll();
+
+        // For each recent order, fetch the item count
+        foreach ($recentOrders as &$order) { // Use & to modify the array directly
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM order_items WHERE order_id = ?");
+            $stmt->execute([$order['id']]);
+            $order['item_count'] = $stmt->fetchColumn();
+        }
+        unset($order); // Unset the reference variable after the loop
+
+        // --- Get Low Stock Medications ---
+        // Using the v_low_stock_alerts view
+        $stmt = $pdo->prepare("SELECT medication_name, stock_quantity, unit, description 
+                               FROM v_low_stock_alerts 
+                               WHERE pharmacy_id = ? AND (stock_quantity <= minimum_stock OR days_to_expiry <= 90)"); // Added expiry condition
+        $stmt->execute([$pharmacy_id]);
+        $lowStockMedications = $stmt->fetchAll();
+
+    } catch (PDOException $e) {
+        $dashboardError = "Error loading dashboard data: " . $e->getMessage();
+        error_log("Dashboard data load error for pharmacy ID " . $pharmacy_id . ": " . $e->getMessage());
     }
 }
 ?>
