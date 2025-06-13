@@ -1,13 +1,11 @@
 <?php
-/**
- * Database Configuration for PharmaSys
- */
+
 
 class Database {
-    private $host = 'localhost';
+    private $host = 'localhost'; // Connect ke database PharmaSys
     private $db_name = 'pharmasys';
-    private $username = 'root'; // Change this to your database username
-    private $password = '';     // Change this to your database password
+    private $username = 'root';
+    private $password = '';
     private $charset = 'utf8mb4';
     private $conn;
 
@@ -35,26 +33,8 @@ class Database {
     }
 }
 
-// Database connection helper function
+// Ini cuma tambahan buat mastiin connect
 function getDBConnection() {
     $database = new Database();
     return $database->getConnection();
 }
-
-// Test database connection
-function testDatabaseConnection() {
-    try {
-        $db = getDBConnection();
-        if ($db) {
-            echo "Database connection successful!";
-            return true;
-        } else {
-            echo "Database connection failed!";
-            return false;
-        }
-    } catch (Exception $e) {
-        echo "Database connection error: " . $e->getMessage();
-        return false;
-    }
-}
-?>
