@@ -1,80 +1,106 @@
 <?php
 session_start();
 
+require_once 'config/database.php'; 
+
+$database = new Database();
+$pdo = $database->getConnection();
+
+if ($pdo === null) {
+    $error = "Failed to connect to the database. Please try again later.";
+}
+
 $success = '';
 $error = '';
 $step = isset($_GET['step']) ? (int)$_GET['step'] : 1;
 
-// Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['next_step'])) {
-        // Store step 1 data in session
+        // Validate and store step 1 data in session
         $_SESSION['pharmacy_registration'] = [
-            'pharmacy_name' => $_POST['pharmacy_name'],
-            'license_number' => $_POST['license_number'],
-            'address' => $_POST['address'],
-            'phone' => $_POST['phone'],
-            'operational_hours' => $_POST['operational_hours'],
-            'description' => $_POST['description']
+            'pharmacy_name' => htmlspecialchars(trim($_POST['pharmacy_name'])),
+            'license_number' => htmlspecialchars(trim($_POST['license_number'])),
+            'address' => htmlspecialchars(trim($_POST['address'])),
+            'phone' => htmlspecialchars(trim($_POST['phone'])),
+            'operational_hours' => htmlspecialchars(trim($_POST['operational_hours'])),
+            'description' => htmlspecialchars(trim($_POST['description']))
         ];
         header("Location: register_pharmacy.php?step=2");
         exit();
     }
     
     if (isset($_POST['register_pharmacy'])) {
-        // Initialize users if not exists
-        if (!isset($_SESSION['users'])) {
-            $_SESSION['users'] = [
-                'pharmacies' => [],
-                'doctors' => []
-            ];
-        }
-        
-        // Check if email already exists
-        $email_exists = false;
-        foreach ($_SESSION['users']['pharmacies'] as $pharmacy) {
-            if ($pharmacy['email'] === $_POST['email']) {
-                $email_exists = true;
-                break;
-            }
-        }
-        
-        if ($email_exists) {
-            $error = 'Email already registered';
-        } elseif ($_POST['password'] !== $_POST['confirm_password']) {
-            $error = 'Passwords do not match';
+        // Ensure step 1 data exists in session
+        if (!isset($_SESSION['pharmacy_registration'])) {
+            $error = 'Please complete step 1 first.';
+            $step = 1; // Redirect back to step 1 if session data is missing
         } else {
             // Combine step 1 and step 2 data
             $pharmacy_data = $_SESSION['pharmacy_registration'];
-            
-            // Create new pharmacy user
-            $new_id = count($_SESSION['users']['pharmacies']) + 1;
-            
-            $new_pharmacy = [
-                'id' => $new_id,
-                'pharmacy_name' => $pharmacy_data['pharmacy_name'],
-                'owner_name' => $_POST['owner_name'],
-                'email' => $_POST['email'],
-                'password' => password_hash($_POST['password'], PASSWORD_DEFAULT),
-                'phone' => $pharmacy_data['phone'],
-                'address' => $pharmacy_data['address'],
-                'operational_hours' => $pharmacy_data['operational_hours'],
-                'license_number' => $pharmacy_data['license_number'],
-                'description' => $pharmacy_data['description'],
-                'created_at' => date('Y-m-d H:i:s')
-            ];
-            
-            $_SESSION['users']['pharmacies'][] = $new_pharmacy;
-            
-            // Clear registration data
-            unset($_SESSION['pharmacy_registration']);
-            
-            $success = 'Pharmacy registered successfully! You can now login.';
+            $owner_name = htmlspecialchars(trim($_POST['owner_name']));
+            $email = htmlspecialchars(trim($_POST['email']));
+            $password = $_POST['password'];
+            $confirm_password = $_POST['confirm_password'];
+
+            // Validation for step 2
+            if ($password !== $confirm_password) {
+                $error = 'Passwords do not match.';
+            } else {
+                try {
+                    // Check if email already exists in the users table
+                    $stmt = $pdo->prepare("SELECT COUNT(*) FROM users WHERE email = ?");
+                    $stmt->execute([$email]);
+                    if ($stmt->fetchColumn() > 0) {
+                        $error = 'Email already registered.';
+                    } else {
+                        // Hash the password securely
+                        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+                        // Start a transaction for atomicity
+                        $pdo->beginTransaction();
+
+                        // 1. Insert into `users` table
+                        $stmt = $pdo->prepare("INSERT INTO users (email, password, user_type, status, email_verified) VALUES (?, ?, 'pharmacy', 'pending', 0)");
+                        $stmt->execute([$email, $hashed_password]);
+                        $user_id = $pdo->lastInsertId(); // Get the ID of the newly inserted user
+
+                        // 2. Insert into `pharmacies` table
+                        $stmt = $pdo->prepare("INSERT INTO pharmacies (user_id, pharmacy_name, owner_name, license_number, phone, address, operational_hours, description, is_verified) 
+                                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)");
+                        $stmt->execute([
+                            $user_id,
+                            $pharmacy_data['pharmacy_name'],
+                            $owner_name,
+                            $pharmacy_data['license_number'],
+                            $pharmacy_data['phone'],
+                            $pharmacy_data['address'],
+                            $pharmacy_data['operational_hours'],
+                            $pharmacy_data['description']
+                        ]);
+
+                        // Commit the transaction if both inserts are successful
+                        $pdo->commit();
+
+                        // Clear registration data from session
+                        unset($_SESSION['pharmacy_registration']);
+                        
+                        // Set success message and redirect to login
+                        $_SESSION['success_message'] = 'Pharmacy registered successfully! Your account is pending verification. You can now login.';
+                        header("Location: login.php");
+                        exit();
+                    }
+                } catch (PDOException $e) {
+                    $pdo->rollBack(); // Rollback transaction on error
+                    $error = 'Registration failed: ' . $e->getMessage();
+                    // In a production environment, log the full error without displaying it to the user
+                    error_log("Pharmacy registration error: " . $e->getMessage());
+                }
+            }
         }
     }
 }
 
-// Get stored data for step 2
+// Get stored data for step 2 (from session)
 $stored_data = $_SESSION['pharmacy_registration'] ?? [];
 ?>
 
@@ -85,6 +111,16 @@ $stored_data = $_SESSION['pharmacy_registration'] ?? [];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pharmacy Registration - PharmaSys</title>
     <link rel="stylesheet" href="styles.css">
+    <script>
+        // This can help retain input values if user goes back via browser button
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                // Page was loaded from cache (e.g., via back/forward button)
+                // You might need more robust JavaScript for complex form state
+                // For now, PHP's value attribute handles POST data
+            }
+        });
+    </script>
 </head>
 <body class="auth-body">
     <div class="auth-container">
@@ -94,7 +130,6 @@ $stored_data = $_SESSION['pharmacy_registration'] ?? [];
                 <p>Pharmacy Registration - Step <?php echo $step; ?> of 2</p>
             </div>
             
-            <!-- Progress Bar -->
             <div class="progress-container">
                 <div class="progress-bar">
                     <div class="progress-step <?php echo $step >= 1 ? 'active' : ''; ?>">
@@ -110,7 +145,6 @@ $stored_data = $_SESSION['pharmacy_registration'] ?? [];
             </div>
             
             <?php if ($step === 1): ?>
-                <!-- Step 1: Pharmacy Information -->
                 <form action="" method="POST" class="auth-form">
                     <h2>Pharmacy Information</h2>
                     
@@ -118,37 +152,37 @@ $stored_data = $_SESSION['pharmacy_registration'] ?? [];
                         <div class="form-group">
                             <label for="pharmacy_name">Pharmacy Name *</label>
                             <input type="text" id="pharmacy_name" name="pharmacy_name" required 
-                                   value="<?php echo isset($_POST['pharmacy_name']) ? htmlspecialchars($_POST['pharmacy_name']) : ''; ?>">
+                                   value="<?php echo isset($_SESSION['pharmacy_registration']['pharmacy_name']) ? htmlspecialchars($_SESSION['pharmacy_registration']['pharmacy_name']) : ''; ?>">
                         </div>
                         
                         <div class="form-group">
                             <label for="license_number">License Number *</label>
                             <input type="text" id="license_number" name="license_number" required 
-                                   value="<?php echo isset($_POST['license_number']) ? htmlspecialchars($_POST['license_number']) : ''; ?>">
+                                   value="<?php echo isset($_SESSION['pharmacy_registration']['license_number']) ? htmlspecialchars($_SESSION['pharmacy_registration']['license_number']) : ''; ?>">
                         </div>
                         
                         <div class="form-group full-width">
                             <label for="address">Address *</label>
-                            <textarea id="address" name="address" rows="3" required><?php echo isset($_POST['address']) ? htmlspecialchars($_POST['address']) : ''; ?></textarea>
+                            <textarea id="address" name="address" rows="3" required><?php echo isset($_SESSION['pharmacy_registration']['address']) ? htmlspecialchars($_SESSION['pharmacy_registration']['address']) : ''; ?></textarea>
                         </div>
                         
                         <div class="form-group">
                             <label for="phone">Phone Number *</label>
                             <input type="text" id="phone" name="phone" required 
-                                   value="<?php echo isset($_POST['phone']) ? htmlspecialchars($_POST['phone']) : ''; ?>">
+                                   value="<?php echo isset($_SESSION['pharmacy_registration']['phone']) ? htmlspecialchars($_SESSION['pharmacy_registration']['phone']) : ''; ?>">
                         </div>
                         
                         <div class="form-group">
                             <label for="operational_hours">Operational Hours *</label>
                             <input type="text" id="operational_hours" name="operational_hours" 
                                    placeholder="e.g., 08:00 - 21:00" required 
-                                   value="<?php echo isset($_POST['operational_hours']) ? htmlspecialchars($_POST['operational_hours']) : ''; ?>">
+                                   value="<?php echo isset($_SESSION['pharmacy_registration']['operational_hours']) ? htmlspecialchars($_SESSION['pharmacy_registration']['operational_hours']) : ''; ?>">
                         </div>
                         
                         <div class="form-group full-width">
                             <label for="description">Description</label>
                             <textarea id="description" name="description" rows="3" 
-                                      placeholder="Brief description of your pharmacy"><?php echo isset($_POST['description']) ? htmlspecialchars($_POST['description']) : ''; ?></textarea>
+                                      placeholder="Brief description of your pharmacy"><?php echo isset($_SESSION['pharmacy_registration']['description']) ? htmlspecialchars($_SESSION['pharmacy_registration']['description']) : ''; ?></textarea>
                         </div>
                     </div>
                     
@@ -158,8 +192,7 @@ $stored_data = $_SESSION['pharmacy_registration'] ?? [];
                     </div>
                 </form>
                 
-            <?php else: ?>
-                <!-- Step 2: Owner Information -->
+            <?php else: // $step === 2 ?>
                 <form action="" method="POST" class="auth-form">
                     <h2>Owner Information</h2>
                     
@@ -199,7 +232,6 @@ $stored_data = $_SESSION['pharmacy_registration'] ?? [];
                         </div>
                     </div>
                     
-                    <!-- Summary of Step 1 Data -->
                     <div class="registration-summary">
                         <h3>Pharmacy Details Summary</h3>
                         <div class="summary-grid">
