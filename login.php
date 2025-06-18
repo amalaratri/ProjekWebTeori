@@ -23,8 +23,8 @@ if (isset($_SESSION['user_id'])) {
     exit();
 }
 
-$error = 'Login Gagal';
-$success_message = 'Login Berhasil';
+$error = '';
+$success_message = '';
 
 if (isset($_SESSION['success_message'])) {
     $success_message = $_SESSION['success_message'];
