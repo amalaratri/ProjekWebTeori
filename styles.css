@@ -1039,3 +1039,225 @@ textarea:focus {
     max-width: 100%;
   }
 }
+
+/* Prescription Form Styles */
+.prescription-form-container {
+  max-width: 1000px;
+}
+
+.prescription-form .card {
+  margin-bottom: 24px;
+}
+
+.medication-item {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.medication-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.medication-grid .full-width {
+  grid-column: 1 / -1;
+}
+
+.medication-actions {
+  text-align: right;
+}
+
+.medication-select {
+  width: 100%;
+}
+
+/* Medication Search Styles */
+.search-medications-form {
+  background-color: #f8fafc;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.medications-grid {
+  display: grid;
+  gap: 24px;
+}
+
+.medication-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.medication-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.medication-header h3 {
+  margin: 0;
+  color: #1e293b;
+  font-size: 1.25rem;
+}
+
+.medication-strength {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.medication-details {
+  margin-bottom: 20px;
+}
+
+.medication-details p {
+  margin: 8px 0;
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.medication-details strong {
+  color: #374151;
+}
+
+.pharmacy-availability h4 {
+  margin-bottom: 12px;
+  color: #1e293b;
+  font-size: 1rem;
+}
+
+.pharmacy-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.pharmacy-info strong {
+  display: block;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.pharmacy-info small {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.availability-info {
+  text-align: center;
+}
+
+.availability-info .stock {
+  display: block;
+  font-weight: 600;
+  color: #059669;
+  margin-bottom: 4px;
+}
+
+.availability-info .price {
+  display: block;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.pharmacy-actions {
+  text-align: right;
+}
+
+.search-results h2 {
+  margin-bottom: 20px;
+  color: #1e293b;
+}
+
+.search-summary {
+  text-align: center;
+  padding: 20px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  margin-top: 24px;
+}
+
+.no-results {
+  text-align: center;
+  padding: 40px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  color: #64748b;
+}
+
+.search-instructions {
+  margin-top: 24px;
+}
+
+.search-instructions ul {
+  list-style-type: disc;
+  margin-left: 20px;
+}
+
+.search-instructions li {
+  margin-bottom: 8px;
+  color: #64748b;
+}
+
+/* Checkbox Group */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.checkbox-group label {
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .medication-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pharmacy-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .availability-info,
+  .pharmacy-actions {
+    text-align: left;
+    width: 100%;
+  }
+
+  .medication-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}

@@ -1,4 +1,4 @@
- <?php
+<?php
 session_start();
 
 // Include your Database class file

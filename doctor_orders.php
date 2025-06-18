@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 
@@ -120,9 +119,13 @@ if ($viewOrderId) {
 
         if ($viewOrder) {
             // Fetch order items with medication details
-            $stmtItems = $pdo->prepare("SELECT oi.*, m.name AS medication_name FROM order_items oi JOIN medications m ON oi.medication_id = m.id WHERE oi.order_id = ?");
+            $stmtItems = $pdo->prepare("SELECT oi.*, m.name AS medication_name, m.strength, m.dosage_form FROM order_items oi JOIN medications m ON oi.medication_id = m.id WHERE oi.order_id = ?");
             $stmtItems->execute([$viewOrderId]);
             $orderItems = $stmtItems->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Debug: uncomment to see what's being fetched
+            // echo "<pre>Order: "; print_r($viewOrder); echo "</pre>";
+            // echo "<pre>Items: "; print_r($orderItems); echo "</pre>";
         } else {
             $viewOrder = null;
             $orderItems = [];
@@ -130,6 +133,7 @@ if ($viewOrderId) {
     } catch (PDOException $e) {
         $viewOrder = null;
         $orderItems = [];
+        error_log("Error fetching order details: " . $e->getMessage());
     }
 } else {
     $orderItems = [];
@@ -255,105 +259,7 @@ if ($viewOrderId) {
                 <div class="alert error"><?php echo $errorMessage; ?></div>
             <?php endif; ?>
 
-            <?php if ($viewOrder): ?>
-                <div class="back-link">
-                    <a href="doctor_orders.php">&larr; Back to Orders</a>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">
-                        <h2>Order #<?php echo htmlspecialchars($viewOrder['id']); ?> Details</h2>
-                        <div class="status-badge <?php echo getStatusClass($viewOrder['status']); ?>">
-                            <?php echo getStatusLabel($viewOrder['status']); ?>
-                        </div>
-                    </div>
-
-            <div class="card-content">
-                <div class="order-info">
-                    <div class="info-group">
-                        <label>Order Number:</label>
-                        <span><?php echo htmlspecialchars($viewOrder['order_number']); ?></span>
-                    </div>
-                    <div class="info-group">
-                        <label>Patient Name:</label>
-                        <span><?php echo htmlspecialchars($viewOrder['patient_name']); ?></span>
-                    </div>
-                    <div class="info-group">
-                        <label>Patient Age:</label>
-                        <span><?php echo htmlspecialchars($viewOrder['patient_age']); ?></span>
-                    </div>
-                    <div class="info-group">
-                        <label>Patient Gender:</label>
-                        <span><?php echo htmlspecialchars(ucfirst($viewOrder['patient_gender'])); ?></span>
-                    </div>
-                    <div class="info-group">
-                        <label>Patient Phone:</label>
-                        <span><?php echo htmlspecialchars($viewOrder['patient_phone']); ?></span>
-                    </div>
-                    <div class="info-group">
-                        <label>Pharmacy:</label>
-                        <span><?php echo htmlspecialchars($viewOrder['pharmacy_name']); ?></span>
-                    </div>
-                    <div class="info-group">
-                        <label>Diagnosis:</label>
-                        <span><?php echo nl2br(htmlspecialchars($viewOrder['diagnosis'])); ?></span>
-                    </div>
-                    <div class="info-group">
-                        <label>Notes:</label>
-                        <span><?php echo nl2br(htmlspecialchars($viewOrder['notes'])); ?></span>
-                    </div>
-                    <div class="info-group">
-                        <label>Status:</label>
-                        <span><?php echo ucfirst(htmlspecialchars($viewOrder['status'])); ?></span>
-                    </div>
-                    <div class="info-group">
-                        <label>Order Date:</label>
-                        <span><?php echo htmlspecialchars($viewOrder['order_date']); ?></span>
-                    </div>
-                    <div class="info-group">
-                        <label>Confirmed At:</label>
-                        <span><?php echo htmlspecialchars($viewOrder['confirmed_at'] ?? 'N/A'); ?></span>
-                    </div>
-                    <div class="info-group">
-                        <label>Completed At:</label>
-                        <span><?php echo htmlspecialchars($viewOrder['completed_at'] ?? 'N/A'); ?></span>
-                    </div>
-                    <div class="info-group">
-                        <form action="doctor_orders.php?view=<?php echo $viewOrder['id']; ?>" method="POST">
-                            <label for="new_status">Update Status:</label>
-                            <select id="new_status" name="new_status" onchange="this.form.submit()">
-                                <option value="pending" <?php echo $viewOrder['status'] === 'pending' ? 'selected' : ''; ?>>New Order</option>
-                                <option value="confirmed" <?php echo $viewOrder['status'] === 'confirmed' ? 'selected' : ''; ?>>Confirmed</option>
-                                <option value="preparing" <?php echo $viewOrder['status'] === 'preparing' ? 'selected' : ''; ?>>Preparing</option>
-                                <option value="ready" <?php echo $viewOrder['status'] === 'ready' ? 'selected' : ''; ?>>Ready for Pickup</option>
-                                <option value="completed" <?php echo $viewOrder['status'] === 'completed' ? 'selected' : ''; ?>>Completed</option>
-                                <option value="cancelled" <?php echo $viewOrder['status'] === 'cancelled' ? 'selected' : ''; ?>>Cancelled</option>
-                            </select>
-                            <input type="hidden" name="order_id" value="<?php echo $viewOrder['id']; ?>" />
-                            <input type="hidden" name="update_status" value="1" />
-                        </form>
-                    </div>
-                </div>
-                <div class="order-items">
-                    <h3>Medications</h3>
-                    <?php if (!empty($orderItems)): ?>
-                        <ul>
-                            <?php foreach ($orderItems as $item): ?>
-                                <li>
-                                    <?php echo htmlspecialchars($item['medication_name']); ?> - Quantity: <?php echo htmlspecialchars($item['quantity']); ?>
-                                    <?php if (!empty($item['dosage_instructions'])): ?>
-                                        <br /><small>Instructions: <?php echo nl2br(htmlspecialchars($item['dosage_instructions'])); ?></small>
-                                    <?php endif; ?>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php else: ?>
-                        <p>No medications found for this order.</p>
-                    <?php endif; ?>
-                </div>
-            </div>
-                </div>
-            <?php else: ?>
+            
                 <div class="table-container">
                     <table>
                         <thead>
@@ -361,7 +267,6 @@ if ($viewOrderId) {
                                 <th>Order ID</th>
                                 <th>Patient Name</th>
                                 <th>Status</th>
-                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -384,20 +289,17 @@ if ($viewOrderId) {
                                                 <input type="hidden" name="update_status" value="1" />
                                             </form>
                                         </td>
-                                        <td class="actions">
-                                            <a href="doctor_orders.php?view=<?php echo htmlspecialchars($order['id']); ?>" class="btn small">View Details</a>
-                                        </td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="4" class="text-center">No orders found.</td>
+                                    <td colspan="3" class="text-center">No orders found.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
-            <?php endif; ?>
+            
         </main>
     </div>
 </body>
