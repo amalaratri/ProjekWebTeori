@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_prescription']
 // Fetch pharmacies
 $pharmacies = [];
 try {
-    $stmt = $pdo->query("SELECT id, pharmacy_name, address FROM pharmacies WHERE is_verified = 1 ORDER BY pharmacy_name");
+    $stmt = $pdo->query("SELECT id, pharmacy_name, address FROM pharmacies ORDER BY pharmacy_name");
     $pharmacies = $stmt->fetchAll();
 } catch (PDOException $e) {
     error_log("Error fetching pharmacies: " . $e->getMessage());

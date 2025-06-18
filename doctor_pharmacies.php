@@ -70,7 +70,3 @@ try {
             <?php else: ?>
                 <p>No pharmacies found.</p>
             <?php endif; ?>
-        </main>
-    </div>
-</body>
-</html>
