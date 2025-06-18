@@ -192,7 +192,7 @@ if ($viewOrderId) {
                         </div>
                         <div class="form-group">
                             <label>Medications</label>
-                            <div id="medications-container">
+                            <div id="medications-container" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; background-color: #f8fafc;">
                                 <select name="medications[]" required>
                                     <option value="">-- Select Medication --</option>
                                     <?php
@@ -210,7 +210,13 @@ if ($viewOrderId) {
                                     ?>
                                 </select>
                             </div>
-                            <button type="button" id="addMedicationBtn">Add Another Medication</button>
+                            <button type="button" id="addMedicationBtn" class="btn btn-secondary" style="margin-top: 12px;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="margin-right: 8px;">
+                                    <line x1="12" y1="5" x2="12" y2="19"/>
+                                    <line x1="5" y1="12" x2="19" y2="12"/>
+                                </svg>
+                                Add Another Medication
+                            </button>
                         </div>
                         <div class="form-actions">
                             <button type="submit" class="btn primary">Create Order</button>
@@ -243,12 +249,46 @@ if ($viewOrderId) {
                     }
                 }
                 addMedBtn.onclick = function() {
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.name = 'medications[]';
-                    input.placeholder = 'Medication name';
-                    input.required = true;
-                    medsContainer.appendChild(input);
+                    const selectContainer = document.createElement('div');
+                    selectContainer.style.marginTop = '12px';
+                    
+                    const select = document.createElement('select');
+                    select.name = 'medications[]';
+                    select.required = true;
+                    select.style.width = '100%';
+                    select.style.padding = '12px 16px';
+                    select.style.border = '1px solid #d1d5db';
+                    select.style.borderRadius = '8px';
+                    select.style.fontSize = '0.875rem';
+                    select.style.backgroundColor = '#ffffff';
+                    
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = '-- Select Medication --';
+                    select.appendChild(defaultOption);
+                    
+                    // Copy options from first select
+                    const firstSelect = document.querySelector('select[name="medications[]"]');
+                    if (firstSelect) {
+                        for (let i = 1; i < firstSelect.options.length; i++) {
+                            const option = firstSelect.options[i].cloneNode(true);
+                            select.appendChild(option);
+                        }
+                    }
+                    
+                    // Add remove button
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'btn danger small';
+                    removeBtn.style.marginTop = '8px';
+                    removeBtn.textContent = 'Remove';
+                    removeBtn.onclick = function() {
+                        selectContainer.remove();
+                    };
+                    
+                    selectContainer.appendChild(select);
+                    selectContainer.appendChild(removeBtn);
+                    medsContainer.appendChild(selectContainer);
                 }
             </script>
 
