@@ -1,7 +1,12 @@
 <?php
 // Get current page for highlighting active menu item
 $currentPage = basename($_SERVER['PHP_SELF']);
-$doctor = $_SESSION['user_data'];
+if (isset($_SESSION['doctor_data'])) {
+    $doctor = $_SESSION['doctor_data'];
+} else {
+    header("Location: login.php");
+    exit();
+}
 ?>
 
 <aside class="sidebar">
@@ -39,8 +44,8 @@ $doctor = $_SESSION['user_data'];
                     <span class="label">My Orders</span>
                 </a>
             </li>
-            <li class="<?php echo $currentPage === 'pharmacies.php' ? 'active' : ''; ?>">
-                <a href="pharmacies.php">
+            <li class="<?php echo $currentPage === 'doctor_pharmacies.php' ? 'active' : ''; ?>">
+                <a href="doctor_pharmacies.php">
                     <span class="icon">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M3 21h18l-9-18-9 18zM12 8v4m0 4h.01"/>
@@ -65,7 +70,7 @@ $doctor = $_SESSION['user_data'];
     
     <div class="sidebar-footer">
         <a href="logout.php" class="logout-link">
-            <span class="icon">
+            <span class="icon" >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                     <polyline points="16,17 21,12 16,7"/>

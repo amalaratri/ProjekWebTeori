@@ -1,4 +1,4 @@
-<?php
+ <?php
 session_start();
 
 // Include your Database class file
@@ -49,60 +49,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$email, $user_type]);
             $user = $stmt->fetch();
 
-            if ($user && password_verify($password, $user['password'])) {
-                // Apakah akun sudah aktif
-                if ($user['status'] === 'pending') {
-                    $error = 'Your account is pending verification. Please wait for administrator approval.';
-                } elseif ($user['status'] === 'inactive') {
-                    $error = 'Your account is inactive. Please contact support.';
-                } else {
-                    // Authentication successful
-                    $_SESSION['user_id'] = $user['id'];
-                    $_SESSION['user_type'] = $user['user_type'];
-                    $_SESSION['user_email'] = $user['email']; // Store email for convenience
+if ($user && password_verify($password, $user['password'])) {
+    // Apakah akun sudah aktif
+    if ($user['status'] === 'inactive') {
+        $error = 'Your account is inactive. Please contact support.';
+    } else {
+        // Authentication successful
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['user_type'] = $user['user_type'];
+        $_SESSION['user_email'] = $user['email']; // Store email for convenience
 
-                    // 2. Fetch user-specific details (pharmacy or doctor)
-                    if ($user_type === 'pharmacy') {
-                        $stmt = $pdo->prepare("SELECT id, pharmacy_name, owner_name, license_number, phone, address, operational_hours, description FROM pharmacies WHERE user_id = ? LIMIT 1");
-                        $stmt->execute([$user['id']]);
-                        $pharmacy_data = $stmt->fetch();
+        // 2. Fetch user-specific details (pharmacy or doctor)
+        if ($user_type === 'pharmacy') {
+            $stmt = $pdo->prepare("SELECT id, pharmacy_name, owner_name, license_number, phone, address, operational_hours, description FROM pharmacies WHERE user_id = ? LIMIT 1");
+            $stmt->execute([$user['id']]);
+            $pharmacy_data = $stmt->fetch();
 
-                        if ($pharmacy_data) {
-                            $_SESSION['pharmacy_id'] = $pharmacy_data['id'];
-                            $_SESSION['pharmacy_name'] = $pharmacy_data['pharmacy_name'];
-                            // Store other pharmacy details in session as needed
-                            $_SESSION['pharmacy_data'] = $pharmacy_data; // Store full data if useful
+            if ($pharmacy_data) {
+                $_SESSION['pharmacy_id'] = $pharmacy_data['id'];
+                $_SESSION['pharmacy_name'] = $pharmacy_data['pharmacy_name'];
+                // Store other pharmacy details in session as needed
+                $_SESSION['pharmacy_data'] = $pharmacy_data; // Store full data if useful
 
-                            // Redirect to pharmacy dashboard
-                            header("Location: dashboard.php");
-                            exit();
-                        } else {
-                            // This should ideally not happen if data integrity is maintained
-                            $error = 'Pharmacy profile not found. Please contact support.';
-                        }
-                    } elseif ($user_type === 'doctor') {
-                        $stmt = $pdo->prepare("SELECT id, full_name, license_number, specialization, phone, address, hospital_clinic FROM doctors WHERE user_id = ? LIMIT 1");
-                        $stmt->execute([$user['id']]);
-                        $doctor_data = $stmt->fetch();
-
-                        if ($doctor_data) {
-                            $_SESSION['doctor_id'] = $doctor_data['id'];
-                            $_SESSION['doctor_name'] = $doctor_data['full_name'];
-                            // Store other doctor details in session as needed
-                            $_SESSION['doctor_data'] = $doctor_data; // Store full data if useful
-
-                            // Redirect to doctor dashboard
-                            header("Location: doctor_dashboard.php");
-                            exit();
-                        } else {
-                            // This should ideally not happen if data integrity is maintained
-                            $error = 'Doctor profile not found. Please contact support.';
-                        }
-                    }
-                }
+                // Redirect to pharmacy dashboard
+                header("Location: dashboard.php");
+                exit();
             } else {
-                $error = 'Invalid email or password.';
+                // This should ideally not happen if data integrity is maintained
+                $error = 'Pharmacy profile not found. Please contact support.';
             }
+        } elseif ($user_type === 'doctor') {
+            $stmt = $pdo->prepare("SELECT id, full_name, license_number, specialization, phone, address, hospital_clinic FROM doctors WHERE user_id = ? LIMIT 1");
+            $stmt->execute([$user['id']]);
+            $doctor_data = $stmt->fetch();
+
+            if ($doctor_data) {
+                $_SESSION['doctor_id'] = $doctor_data['id'];
+                $_SESSION['doctor_name'] = $doctor_data['full_name'];
+                // Store other doctor details in session as needed
+                $_SESSION['doctor_data'] = $doctor_data; // Store full data if useful
+
+                // Redirect to doctor dashboard
+                header("Location: doctor_dashboard.php");
+                exit();
+            } else {
+                // This should ideally not happen if data integrity is maintained
+                $error = 'Doctor profile not found. Please contact support.';
+            }
+        }
+    }
+} else {
+    $error = 'Invalid email or password.';
+}
         } catch (PDOException $e) {
             $error = 'Login failed due to a system error. Please try again later.';
             // Log the error for debugging (never display raw PDO exceptions in production)
