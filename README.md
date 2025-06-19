@@ -43,35 +43,34 @@ Pharmasys adalah sebuah aplikasi web berbasis PHP yang dirancang untuk memudahka
 ## 📁 Struktur Proyek
 ProjekWebTeori/
 │
-├── index.php # Halaman login utama
-├── register.php # Pendaftaran umum
-├── register_doctor.php # Pendaftaran akun dokter
-├── register_pharmacy.php # Pendaftaran akun apotek
-├── login.php # Proses autentikasi login
-├── logout.php # Logout pengguna
+├── index.php                  # Halaman login utama
+├── register.php               # Pendaftaran umum
+├── register_doctor.php        # Pendaftaran akun dokter
+├── register_pharmacy.php      # Pendaftaran akun apotek
+├── login.php                  # Proses autentikasi login
+├── logout.php                 # Logout pengguna
 │
-├── dashboard.php # Dashboard utama
-├── doctor_dashboard.php # Dashboard khusus dokter
-├── doctor_prescriptions.php # Buat dan kelola resep
-├── doctor_orders.php # Pantau pesanan dari apotek
-├── doctor_pharmacies.php # Lihat daftar apotek
+├── dashboard.php              # Dashboard utama
+├── doctor_dashboard.php       # Dashboard khusus dokter
+├── doctor_prescriptions.php   # Buat dan kelola resep
+├── doctor_orders.php          # Pantau pesanan dari apotek
+├── doctor_pharmacies.php      # Lihat daftar apotek
 ├── doctor_medication_search.php # Pencarian obat
 │
-├── pharmacies.php # Kelola daftar apotek (untuk apotek)
-├── inventory.php # Kelola inventaris obat
-├── orders.php # Kelola pesanan masuk
+├── pharmacies.php             # Kelola daftar apotek
+├── inventory.php              # Kelola inventaris obat
+├── orders.php                 # Kelola pesanan masuk
 │
-├── profile.php # Halaman pengaturan profil
-├── sidebar.php # Navigasi umum
-├── doctor_sidebar.php # Navigasi khusus dokter
+├── profile.php                # Halaman pengaturan profil
+├── sidebar.php                # Navigasi umum
+├── doctor_sidebar.php         # Navigasi khusus dokter
 │
 ├── get_pharmacy_medications.php # Ambil data obat dari apotek
-├── install.php # Setup awal basis data
-├── pharmasys.sql # Struktur database MySQL
+├── install.php                # Setup awal basis data
+├── pharmasys.sql              # Struktur database MySQL
 │
-├── styles.css # Desain dan tampilan antarmuka
-└── .git/ # File sistem Git (abaikan jika bukan untuk versi kontrol)
-
+├── styles.css                 # Desain dan tampilan antarmuka
+└── .git/                      # Folder Git (abaikan)
 
 ---
 
@@ -108,13 +107,19 @@ ProjekWebTeori/
 Jika tersedia, tambahkan akun dummy yang bisa digunakan untuk testing, misalnya:
 
 **Akun Dokter**  
-- Username: ``  
-- Password: `password123`
+- Email: `dr.budi@example.com`  
+- Password: `password`
+
+- Email: `dr.siti@example.com`  
+- Password: `password`
 
 **Akun Apotek**  
-- Username: `apotek1`  
-- Password: `password123`
+- Email: `apotek.sehat@example.com`  
+- Password: `password`
 
+- Email: `apotek.kimia@example.com`  
+- Password: `password`
+  
 ---
 
 ## 📝 Catatan
@@ -129,13 +134,9 @@ Jika tersedia, tambahkan akun dummy yang bisa digunakan untuk testing, misalnya:
 
 Proyek ini dibuat sebagai bagian dari pembelajaran/pengembangan sistem informasi berbasis web oleh:
 
-**Nama/NIM/Tim:**  
-- [Nama Anda]  
-- [Institusi atau Kelas]  
-- [Tanggal Pengerjaan]
+**Nama, NPM, Kelas:**  
+- Amala Ratri Nugraheni 2317051007 Kelas A
+- Adila Nurul Hidayah 2317051034 Kelas A
+- Sofia' Azahra 2317051075 Kelas A
+- Aderiana Yustitia 2317051110 Kelas A
 
----
-
-## 📄 Lisensi
-
-Proyek ini bersifat open-source untuk keperluan pembelajaran dan pengembangan. Dilarang mengklaim sebagai produk komersial tanpa izin pembuat aslinya.
