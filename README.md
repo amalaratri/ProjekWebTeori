@@ -128,7 +128,7 @@ Jika tersedia, tambahkan akun dummy yang bisa digunakan untuk testing, misalnya:
 
 ## 📝 Catatan
 
-- Pastikan modul PHP `mysqli` sudah aktif di server Anda.
+- Pastikan modul PHP `mysql` sudah aktif di server Anda.
 - Jika ada error, cek log error dari server dan pastikan konfigurasi basis data benar.
 - Untuk keperluan deployment, disarankan menambahkan sistem validasi dan keamanan tambahan (misalnya hash password, validasi form).
 
