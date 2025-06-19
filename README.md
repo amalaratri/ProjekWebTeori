@@ -41,6 +41,10 @@ Pharmasys adalah sebuah aplikasi web berbasis PHP yang dirancang untuk memudahka
 ---
 
 ## 📁 Struktur Proyek
+
+## 📁 Struktur Proyek
+
+```plaintext
 ProjekWebTeori/
 │
 ├── index.php                  # Halaman login utama
@@ -71,7 +75,7 @@ ProjekWebTeori/
 │
 ├── styles.css                 # Desain dan tampilan antarmuka
 └── .git/                      # Folder Git (abaikan)
-
+```
 ---
 
 ## 🛠️ Teknologi yang Digunakan
